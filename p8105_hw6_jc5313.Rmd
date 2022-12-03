@@ -183,15 +183,59 @@ birthweight_tidy = birthweight %>%
 
 **Check for missing data:** There are `r sum(is.na(birthweight_tidy))` missing values.
 
-Now, I propose a regression model for birthweight, where I hypothesize that the following factors underly birthweight (`bwt`): baby's sex (`babysex`), gestational age in weeks (`gaweeks`), presence of malformations (`malform`), and previous number of low birth weight babies (`pnumlbw`). I plot model residuals against fitted values.
+Now, I propose a regression model ("model_a") for birthweight, where I hypothesize that the following factors underly birthweight (`bwt`): baby's sex (`babysex`), gestational age in weeks (`gaweeks`), presence of malformations (`malform`), and previous number of low birth weight babies (`pnumlbw`). I plot model residuals against fitted values.
 
 ```{r}
-proposed_model = lm(bwt ~ babysex + gaweeks+ malform + pnumlbw, data = birthweight_tidy) 
+model_a = lm(bwt ~ babysex + gaweeks+ malform + pnumlbw, data = birthweight_tidy) 
 birthweight_tidy %>% 
-  add_predictions(proposed_model) %>% 
-  add_residuals(proposed_model) %>% 
+  add_predictions(model_a) %>% 
+  add_residuals(model_a) %>% 
   ggplot(aes(x = pred, y = resid)) + 
   geom_point() +
   labs(title = "Residuals vs fitted values for model with predictors babysex, gaweeks, malform, pnumlbw")
 ```
 
+Next, I will compare my proposed regression model ("model_a") to two others:
+
+* model_b: length at birth and gestational age as predictors (main effects only)
+* model_c: head circumference, length, sex, and all interactions (including the three-way interaction) between these
+
+```{r}
+model_b = lm(bwt ~ blength + gaweeks, data = birthweight_tidy)
+model_c = lm(bwt ~ bhead + blength + babysex +  bhead*blength + bhead*babysex + blength*babysex + bhead*blength*babysex, data = birthweight_tidy)
+```
+
+I use `crossv_mc` and `map` functions in `purrr` to make a comparison between the cross-validated predicton errors of all 3 models. 
+
+```{r}
+birthweight_crossval = 
+  crossv_mc(birthweight, 100) %>% 
+  mutate(train = map(train, as_tibble),
+         test = map(test, as_tibble)) %>% 
+  mutate(
+    model_a = map(train, ~lm(bwt ~ babysex + gaweeks+ malform + pnumlbw, data = .x)),
+    model_b =  map(train, ~lm(bwt ~ blength + gaweeks, data = .x)),
+    model_c = map(train, ~lm(bwt ~ bhead + blength + babysex +  bhead*blength + bhead*babysex + blength*babysex +
+                               bhead*blength*babysex, data = .x))) %>% 
+  mutate(
+    rmse_model_a = map2_dbl(.x = model_a, .y = test, ~rmse(model = .x, data = .y)),
+    rmse_model_b =  map2_dbl(.x = model_b, .y = test, ~rmse(model = .x, data = .y)),
+    rmse_model_c = map2_dbl(.x = model_c, .y = test, ~rmse(model = .x, data = .y))
+  )
+```
+ 
+Lastly, I plot the RMSE distributions for all 3 models so as to compare them:
+
+```{r}
+birthweight_crossval %>% 
+  select(starts_with("rmse")) %>% 
+  pivot_longer(everything(),
+    names_to = "model",
+    values_to = "rmse",
+    names_prefix = "rmse_") %>% 
+  ggplot(aes(x = model, y = rmse)) +
+  geom_boxplot() +
+  labs(title = "Comparing RMSE distributions of Models A, B, C")
+```
+
+**Best model:** It seems like Model C ("model_c"), which is the model that has the interaction terms, has the best fit of the three models since it has the lowest RMSE.
