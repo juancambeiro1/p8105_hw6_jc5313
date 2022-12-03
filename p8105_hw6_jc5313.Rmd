@@ -88,14 +88,14 @@ The point of this is not to say you should always use the bootstrap -- it's poss
 
 ### Problem 2
 
-First, I will load and clean the homicide data that was gathered by The Washington Post and describe the raw data.
+#### Load, clean, tidy
+
+First, I will load and clean the homicide data that was gathered by The Washington Post.
 ```{r}
 homicide =
   read_csv("data/homicide-data.csv") %>%
   janitor::clean_names()
 ```
-
-**Description of raw data:** There are `r nrow(homicide)` observations and `r ncol(homicide)` variables in the dataset.
 
 Next, I will tidy the data by using `mutate` to make a `city_state` variable and I will also make a binary `resolved` variable to indicate whether a homicide is resolved (1 for solved, 0 for not solved). I also ensure appropriate data types are used. I use `filter` to omit the following cities: Dallas, TX; Phoenix, AZ; Kansas City, MO; Tulsa, AL. I also use `filter` to limit the analysis to those victim_race is White or Black.
 ```{r}
@@ -117,8 +117,9 @@ homicide_tidy = homicide %>%
 
 **Description of tidied data:** There are now `r nrow(homicide_tidy)` observations and `r ncol(homicide_tidy)` variables in the dataset.
 
+#### Baltimore logistic regression
 
-Now, I use the `glm` function to fit a logistic regression for Baltimore, MD with the binary `resolved` variable as the outcome and `victim_age`, `victim_sex`, and `victim_race` as predictors. I save the output as an R object, apply `broom::tidy`, and obtain the estimate and confidence interval of the adjusted OR for homicides resolved comparing male victims to female victims.
+Now, I use the `glm` function to fit a logistic regression for Baltimore, MD with the binary `resolved` variable as the outcome and `victim_age`, `victim_sex`, and `victim_race` as predictors. I save the output as an R object, apply `broom::tidy`, and obtain the estimate and confidence interval of the adjusted OR for homicides resolved comparing male victims to female victims and keeping all other variables fixed.
 
 ```{r}
 baltimore_glm =
@@ -132,6 +133,8 @@ output
 ```
 
 **Adjusted OR for solving homicides in Baltimore, comparing male victims to female victims:** 0.426 (95% CI: 0.324, 0.558)
+
+#### All cities logistic regression
 
 Next, I run `glm` for each of the cities in my dataset to extract the adjusted ORs and corresponding CIs for solving homicides comparing male victims and female victims. I do this using  `purrr::map`, list columns, and `unnest` to create a dataframe with estimated ORs and CIs for each city. 
 
@@ -149,6 +152,8 @@ all_cities_glm =
 all_cities_glm
 ```
 
+#### Plot of ORs by city
+
 Now, I create a plot to show the estimated ORs and corresponding CIs by city, organized by estimated OR. 
 
 ```{r}
@@ -161,16 +166,18 @@ all_cities_glm %>%
     y = "City")
 ```
 
+We can see in the above plot that, in most cities, when we adjust for victim age and victim race we find that the odds of homicide resolution is lower among male victims than among female victims (since the ORs of most cities are below 1.0). Albuquerque, NM has the highest OR for male homicide resolutions compared to females, while New York, NY has the lowest OR. 
+
 ### Problem 3
 
-First, I will load and clean the birthweight data and describe the raw data.
+#### Load, clean, tidy
+
+First, I will load and clean the birthweight data.
 ```{r}
 birthweight =
   read_csv("data/birthweight.csv") %>%
   janitor::clean_names()
 ```
-
-**Description of raw data:** There are `r nrow(birthweight)` observations and `r ncol(birthweight)` variables in the dataset.
 
 Next, I will tidy the data by using `mutate` to ensure appropriate data types are used. I will also check for missing data.
 ```{r}
@@ -182,6 +189,8 @@ birthweight_tidy = birthweight %>%
 ```
 
 **Check for missing data:** There are `r sum(is.na(birthweight_tidy))` missing values.
+
+#### My proposed model: Model A
 
 Now, I propose a regression model ("model_a") for birthweight, where I hypothesize that the following factors underly birthweight (`bwt`): baby's sex (`babysex`), gestational age in weeks (`gaweeks`), presence of malformations (`malform`), and previous number of low birth weight babies (`pnumlbw`). I plot model residuals against fitted values.
 
@@ -195,6 +204,8 @@ birthweight_tidy %>%
   labs(title = "Residuals vs fitted values for model with predictors babysex, gaweeks, malform, pnumlbw")
 ```
 
+#### Comparing Models A, B, C
+
 Next, I will compare my proposed regression model ("model_a") to two others ("model_b", "model_c"):
 
 ```{r}
@@ -202,7 +213,7 @@ model_b = lm(bwt ~ blength + gaweeks, data = birthweight_tidy)
 model_c = lm(bwt ~ bhead + blength + babysex +  bhead*blength + bhead*babysex + blength*babysex + bhead*blength*babysex, data = birthweight_tidy)
 ```
 
-I use `crossv_mc` and `map` functions in `purrr` to make a comparison between the cross-validated predicton errors of all 3 models. 
+I use `crossv_mc` and `map` functions in `purrr` to make a comparison between the cross-validated prediction errors of all 3 models. 
 
 ```{r}
 birthweight_crossval = 
