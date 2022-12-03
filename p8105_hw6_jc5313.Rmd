@@ -95,8 +95,7 @@ homicide =
   janitor::clean_names()
 ```
 
-**Description of raw data:** There are now `r nrow(homicide)` observations and `r ncol(homicide)` variables in the dataset.
-
+**Description of raw data:** There are `r nrow(homicide)` observations and `r ncol(homicide)` variables in the dataset.
 
 Next, I will tidy the data by using `mutate` to make a `city_state` variable and I will also make a binary `case_solved` variable to indicate whether a homicide is resolved (1 for solved, 0 for not solved). I also ensure appropriate data types are used. I use `filter` to omit the following cities: Dallas, TX; Phoenix, AZ; Kansas City, MO; Tulsa, AL. I also use `filter` to limit the analysis to those victim_race is White or Black.
 ```{r}
@@ -157,9 +156,29 @@ all_cities_glm %>%
   ggplot(aes(x = estimate, y = reorder(city_state, +estimate))) +
   geom_point() +
   geom_errorbar(aes(xmin = conf.low, xmax = conf.high)) +
-  labs(title = "Odds Ratios for Homicide Resolutions By City, Comparing Male to Female Victims",
+  labs(title = "ORs for Homicide Resolutions By City, Comparing Male to Female Victims",
     x = "OR",
     y = "City")
 ```
 
+### Problem 3
 
+First, I will load and clean the birthweight data and describe the raw data.
+```{r}
+birthweight =
+  read_csv("data/birthweight.csv") %>%
+  janitor::clean_names()
+```
+
+**Description of raw data:** There are `r nrow(birthweight)` observations and `r ncol(birthweight)` variables in the dataset.
+
+Next, I will tidy the data by using `mutate` to ensure appropriate data types are used. I will also check for missing data.
+```{r}
+birthweight_tidy = birthweight %>%
+  mutate(babysex = as.factor(babysex),
+         frace = as.factor(frace),
+         malform = as.factor(malform),
+         mrace = as.factor(mrace))
+```
+
+**Description of tidied data:** There are now `r nrow(birthweight_tidy)` observations and `r ncol(birthweight_tidy)` variables in the dataset. There are `r sum(is.na(birthweight_tidy))` missing values.
