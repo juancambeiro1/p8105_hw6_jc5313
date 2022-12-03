@@ -181,4 +181,17 @@ birthweight_tidy = birthweight %>%
          mrace = as.factor(mrace))
 ```
 
-**Description of tidied data:** There are now `r nrow(birthweight_tidy)` observations and `r ncol(birthweight_tidy)` variables in the dataset. There are `r sum(is.na(birthweight_tidy))` missing values.
+**Check for missing data:** There are `r sum(is.na(birthweight_tidy))` missing values.
+
+Now, I propose a regression model for birthweight, where I hypothesize that the following factors underly birthweight (`bwt`): baby's sex (`babysex`), gestational age in weeks (`gaweeks`), presence of malformations (`malform`), and previous number of low birth weight babies (`pnumlbw`). I plot model residuals against fitted values.
+
+```{r}
+proposed_model = lm(bwt ~ babysex + gaweeks+ malform + pnumlbw, data = birthweight_tidy) 
+birthweight_tidy %>% 
+  add_predictions(proposed_model) %>% 
+  add_residuals(proposed_model) %>% 
+  ggplot(aes(x = pred, y = resid)) + 
+  geom_point() +
+  labs(title = "Residuals vs fitted values for model with predictors babysex, gaweeks, malform, pnumlbw")
+```
+
