@@ -154,12 +154,12 @@ Now, I create a plot to show the estimated ORs and corresponding CIs by city, or
 
 ```{r}
 all_cities_glm %>%
-  ggplot(aes(x = reorder(city_state, +estimate), y = estimate)) +
+  ggplot(aes(x = estimate, y = city_state)) +
   geom_point() +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+  geom_errorbar(aes(xmin = conf.low, xmax = conf.high)) +
   labs(title = "Odds Ratios for Homicide Resolutions By City, Comparing Male to Female Victims",
-    x = "City",
-    y = "OR")
+    x = "OR",
+    y = "City")
 ```
 
 
