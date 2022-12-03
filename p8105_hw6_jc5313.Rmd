@@ -157,7 +157,7 @@ all_cities_glm %>%
   geom_point() +
   geom_errorbar(aes(xmin = conf.low, xmax = conf.high)) +
   labs(title = "ORs for Homicide Resolutions By City, Comparing Male to Female Victims",
-    x = "OR",
+    x = "Odds Ratio",
     y = "City")
 ```
 
@@ -195,10 +195,7 @@ birthweight_tidy %>%
   labs(title = "Residuals vs fitted values for model with predictors babysex, gaweeks, malform, pnumlbw")
 ```
 
-Next, I will compare my proposed regression model ("model_a") to two others:
-
-* model_b: length at birth and gestational age as predictors (main effects only)
-* model_c: head circumference, length, sex, and all interactions (including the three-way interaction) between these
+Next, I will compare my proposed regression model ("model_a") to two others ("model_b", "model_c"):
 
 ```{r}
 model_b = lm(bwt ~ blength + gaweeks, data = birthweight_tidy)
@@ -238,4 +235,4 @@ birthweight_crossval %>%
   labs(title = "Comparing RMSE distributions of Models A, B, C")
 ```
 
-**Best model:** It seems like Model C ("model_c"), which is the model that has the interaction terms, has the best fit of the three models since it has the lowest RMSE.
+**Best model:** It seems like Model C ("model_c"), which is the model that has the interaction terms, has the best fit of the three models since it has the lowest RMSE. Thus, I would keep Model C. 
